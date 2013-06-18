@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<body>
+<head>
+<style>
+div.bar {
+    display: inline-block;
+    width: 15px;
+    margin-right: 1px;
+}
+</style>
+<script src="http://code.jquery.com/jquery-1.10.0.min.js" charset="utf-8"></script>
+<script src="ga.js?v=7"></script>
+<script src="https://apis.google.com/js/client.js"></script>
+
+</head>
+<body>
+<script>
+var dimensions = ['ga:visitorType', 'ga:visitCount', 'ga:daysSinceLastVisit']
+var metrics = ['ga:visits', 'ga:newVisits'];
+
+var groupBy = groupByList[0];
+
+var first = null;
+var second = null;
+
+function findResults(query, cb) {
+  makeApiCall($.extend(query, {   
+    'metrics': metrics[0],
+    'dimensions' : dimensions[0]
+   }),
+   cb 
+ );
+}
+
+function done() {
+	if (first && second) {
+test(first, second, "overall",
+	function(a, b) {
+var metricName1 = a[0];
+var metricValue1 = a[1];
+var metricValue2 = b[1];
+		if (metricValue2 > metricValue1) {
+			return "Increased " + metricName1 + ":" + metricValue2 + " > " + metricValue1 + "(" + Math.round(100*(metricValue2-metricValue1)/metricValue2) + "%)";
+		}
+	}
+);
+}
+}
+
+function start() {
+findResults(
+    {'start-date': '2013-01-03',
+    'end-date': '2013-02-03'},
+    function(x){first=x.rows; done();}
+);
+
+findResults(
+    {'start-date': '2013-02-03',
+    'end-date': '2013-03-03'},
+    function(x){second=x.rows; done()}
+);
+}
+
+// construct a map
+function test(first, second, criteria, interesting) {
+	var firstMap = {};
+	var secondMap = {};
+	$.each(first, function(i, row) { firstMap[row[0]] = row; })
+	$.each(second, function(i, row) { secondMap[row[0]] = row; })
+
+	for (k in firstMap) {
+		if (firstMap[k] !== undefined && secondMap[k] !== undefined) {
+			console.log("Match: " + k);
+
+			var row1 = firstMap[k];
+			var row2 = secondMap[k];
+	
+			interestingResult = interesting(row1, row2); 
+			if (interestingResult) {	
+				console.log("For " + criteria + ", grouped by " + groupBy + " = " + k + ":", interestingResult);
+			}		
+		}
+	}
+}
+
+</script>
+    <button id="authorize-button" style="visibility: hidden">Authorize</button><br/>
+    <button id="make-api-call-button" style="visibility: hidden">Get Visits</button>
+    <button id="make-api-call-button2" style="" onclick="start()">Get Visits 2</button>
+
+  </body>
+</html>
